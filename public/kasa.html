@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasa Paneli - Restoran Sipariş Sistemi</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-cash-register"></i> Kasa Paneli</h1>
+                <a href="/" class="back-btn"><i class="fas fa-home"></i> Ana Sayfa</a>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="cashier-layout">
+                <!-- Sol Panel - Aktif Siparişler -->
+                <div class="left-panel">
+                    <div class="section">
+                        <h3><i class="fas fa-receipt"></i> Ödeme Bekleyen Siparişler</h3>
+                        <div class="order-filters">
+                            <button class="filter-btn active" data-status="hazir">Hazır</button>
+                            <button class="filter-btn" data-status="odendi">Ödendi</button>
+                        </div>
+                        
+                        <div class="payment-orders" id="paymentOrders">
+                            <!-- Ödeme bekleyen siparişler dinamik olarak yüklenecek -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sağ Panel - Sipariş Detayı ve Ödeme -->
+                <div class="right-panel">
+                    <div class="section">
+                        <h3><i class="fas fa-info-circle"></i> Sipariş Detayı</h3>
+                        <div class="order-detail" id="orderDetail">
+                            <div class="empty-message">
+                                <i class="fas fa-receipt"></i>
+                                <p>Detay görmek için bir sipariş seçin</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3><i class="fas fa-credit-card"></i> Ödeme Alma</h3>
+                        <div class="payment-section" id="paymentSection">
+                            <div class="empty-message">
+                                <p>Ödeme almak için sipariş seçin</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3><i class="fas fa-chart-line"></i> Günlük Özet</h3>
+                        <div class="daily-summary">
+                            <div class="summary-item">
+                                <div class="summary-label">Toplam Ciro</div>
+                                <div class="summary-value" id="totalRevenue">0.00 TL</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Toplam Sipariş</div>
+                                <div class="summary-value" id="totalOrders">0</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Ortalama Sipariş</div>
+                                <div class="summary-value" id="avgOrder">0.00 TL</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Ödeme Başarı Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Ödeme Alındı!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Sipariş ödemesi başarıyla alındı.</p>
+                <div class="payment-info" id="modalPaymentInfo">
+                    <!-- Ödeme bilgileri -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closePaymentModal()">Tamam</button>
+                <button class="btn btn-secondary" onclick="printReceipt()">
+                    <i class="fas fa-print"></i> Fiş Yazdır
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="kasa.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restoran Sipariş Yönetim Sistemi</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-utensils"></i> Restoran Sipariş Sistemi</h1>
+            <p>Profesyonel sipariş yönetimi için modern çözüm</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Giriş Formu -->
+            <div class="auth-section" id="authSection">
+                <div class="auth-header">
+                    <h2><i class="fas fa-sign-in-alt"></i> Giriş Yap</h2>
+                    <p>Sisteme erişmek için giriş yapın</p>
+                </div>
+
+                <!-- Giriş Formu -->
+                <div class="auth-form active" id="loginForm">
+                    <form id="loginFormElement">
+                        <div class="form-group">
+                            <label for="loginUsername">Kullanıcı Adı</label>
+                            <input type="text" id="loginUsername" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Şifre</label>
+                            <input type="password" id="loginPassword" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Ana Paneller (Giriş yapıldıktan sonra görünür) -->
+            <div class="dashboard-section" id="dashboardSection" style="display: none;">
+                <div class="user-info">
+                    <span id="userInfo">Hoş geldiniz!</span>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+                    </button>
+                </div>
+
+                <div class="card-grid" id="cardGrid">
+                    <!-- Üst Sıra: Garson, Mutfak, Kasa -->
+                    <div class="card-row">
+                        <!-- Garson Paneli (Normal Kullanıcı + Admin) -->
+                        <div class="card" onclick="navigateToPanel('garson')">
+                            <div class="card-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h3>Garson Paneli</h3>
+                            <p>Sipariş girişi ve masa yönetimi</p>
+                            <div class="card-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <!-- Mutfak Paneli (Normal Kullanıcı + Admin) -->
+                        <div class="card" onclick="navigateToPanel('mutfak')">
+                            <div class="card-icon">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                            <h3>Mutfak Paneli</h3>
+                            <p>Sipariş takibi ve hazırlık durumu</p>
+                            <div class="card-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <!-- Kasa Paneli (Sadece Admin) -->
+                        <div class="card admin-only" onclick="navigateToPanel('kasa')">
+                            <div class="card-icon">
+                                <i class="fas fa-cash-register"></i>
+                            </div>
+                            <h3>Kasa Paneli</h3>
+                            <p>Ödeme alma ve hesap yönetimi</p>
+                            <div class="card-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alt Sıra: Stok Yönetimi, Raporlar -->
+                    <div class="card-row">
+                        <!-- Stok Yönetimi Paneli (Sadece Admin) -->
+                        <div class="card admin-only" onclick="navigateToPanel('stok')">
+                            <div class="card-icon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <h3>Stok Yönetimi</h3>
+                            <p>Ürün stoklarını takip et ve yönet</p>
+                            <div class="card-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <!-- Raporlar Paneli (Sadece Admin) -->
+                        <div class="card admin-only" onclick="navigateToPanel('raporlar')">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Raporlar</h3>
+                            <p>Satış ve gelir raporlarını görüntüle</p>
+                            <div class="card-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features">
+                    <h2>Sistem Özellikleri</h2>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>Gerçek zamanlı sipariş takibi</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Renk kodlu zaman takibi</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Mobil uyumlu tasarım</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Detaylı raporlama</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Restoran Sipariş Sistemi. Tüm hakları saklıdır.</p>
+        </footer>
+    </div>
+
+    <!-- Bildirim Modal -->
+    <div class="notification-modal" id="notificationModal">
+        <div class="notification-content">
+            <div class="notification-header">
+                <h3 id="notificationTitle">Bildirim</h3>
+                <button class="close-btn" onclick="closeNotification()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notification-body">
+                <p id="notificationMessage">Mesaj</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

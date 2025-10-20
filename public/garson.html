@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garson Paneli - Restoran Sipariş Sistemi</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-user-tie"></i> Garson Paneli</h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">Garson</span>
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Ana Sayfa
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="garson-layout">
+                <!-- Sol Panel - Masa Seçimi ve Sipariş -->
+                <div class="left-panel">
+                    <div class="section">
+                        <h3><i class="fas fa-table"></i> Masa Seçimi</h3>
+                        <div class="masa-grid" id="masaGrid">
+                            <!-- Masalar dinamik olarak yüklenecek -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3><i class="fas fa-utensils"></i> Menü</h3>
+                        <div class="menu-tabs">
+                            <button class="tab-btn active" data-tab="yemekler">Yemekler</button>
+                            <button class="tab-btn" data-tab="icecekler">İçecekler</button>
+                        </div>
+                        
+                        <div class="menu-content">
+                            <div class="tab-content active" id="yemekler">
+                                <div class="menu-grid" id="yemekGrid">
+                                    <!-- Yemekler dinamik olarak yüklenecek -->
+                                </div>
+                            </div>
+                            <div class="tab-content" id="icecekler">
+                                <div class="menu-grid" id="icecekGrid">
+                                    <!-- İçecekler dinamik olarak yüklenecek -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sağ Panel - Sipariş Özeti -->
+                <div class="right-panel">
+                    <div class="section">
+                        <h3><i class="fas fa-shopping-cart"></i> Sipariş Özeti</h3>
+                        <div class="order-summary">
+                            <div class="selected-masa">
+                                <strong>Seçili Masa:</strong>
+                                <span id="selectedMasa">Masa seçiniz</span>
+                            </div>
+                            
+                            <div class="order-items" id="orderItems">
+                                <p class="empty-message">Henüz ürün seçilmedi</p>
+                            </div>
+                            
+                            <div class="order-total">
+                                <strong>Toplam:</strong>
+                                <span id="orderTotal">0.00 TL</span>
+                            </div>
+                        </div>
+
+                        <div class="order-actions">
+                            <textarea 
+                                id="orderNotes" 
+                                placeholder="Sipariş notları (örn: soslu, sossuz, ekstra notlar...)"
+                                rows="3"
+                            ></textarea>
+                            
+                            <button class="btn btn-primary" id="submitOrder">
+                                <i class="fas fa-paper-plane"></i> Siparişi Gönder
+                            </button>
+                            
+                            <button class="btn btn-secondary" id="clearOrder">
+                                <i class="fas fa-trash"></i> Siparişi Temizle
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3><i class="fas fa-clock"></i> Son Siparişler</h3>
+                        <div class="recent-orders" id="recentOrders">
+                            <!-- Son siparişler dinamik olarak yüklenecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sipariş Başarı Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-check-circle"></i> Sipariş Başarılı!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Sipariş mutfağa ve kasaya iletildi.</p>
+                <div class="order-details" id="modalOrderDetails">
+                    <!-- Sipariş detayları -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal()">Tamam</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="garson.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raporlar - Restoran Sipariş Sistemi</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <h1><i class="fas fa-chart-line"></i> Satış & Gelir Raporları</h1>
+                    <p>Detaylı satış analizi ve gelir takibi</p>
+                </div>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">Kullanıcı</span>
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Ana Sayfa
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtreler -->
+        <div class="section">
+            <h3><i class="fas fa-filter"></i> Rapor Filtreleri</h3>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label>Zaman Aralığı:</label>
+                    <select id="timeRange">
+                        <option value="today">Bugün</option>
+                        <option value="week">Bu Hafta</option>
+                        <option value="month" selected>Bu Ay</option>
+                        <option value="year">Bu Yıl</option>
+                        <option value="custom">Özel Aralık</option>
+                    </select>
+                </div>
+                <div class="filter-group" id="customDateRange" style="display: none;">
+                    <label>Başlangıç:</label>
+                    <input type="date" id="startDate">
+                    <label>Bitiş:</label>
+                    <input type="date" id="endDate">
+                </div>
+                <div class="filter-group">
+                    <label>Rapor Tipi:</label>
+                    <select id="reportType">
+                        <option value="sales">Satış Raporu</option>
+                        <option value="revenue">Gelir Raporu</option>
+                        <option value="products">Ürün Analizi</option>
+                        <option value="tables">Masa Analizi</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="generateReport()">
+                    <i class="fas fa-sync-alt"></i> Rapor Oluştur
+                </button>
+            </div>
+        </div>
+
+                 <!-- Özet Kartları -->
+         <div class="summary-cards">
+             <div class="summary-card">
+                 <div class="summary-icon">
+                     <i class="fas fa-shopping-cart"></i>
+                 </div>
+                 <div class="summary-content">
+                     <h4>Toplam Sipariş</h4>
+                     <div class="summary-value" id="totalOrders">0</div>
+                 </div>
+             </div>
+             <div class="summary-card">
+                 <div class="summary-icon">
+                     <i class="fas fa-lira-sign"></i>
+                 </div>
+                 <div class="summary-content">
+                     <h4>Toplam Gelir</h4>
+                     <div class="summary-value" id="totalRevenue">0.00 TL</div>
+                 </div>
+             </div>
+             <div class="summary-card">
+                 <div class="summary-icon">
+                     <i class="fas fa-utensils"></i>
+                 </div>
+                 <div class="summary-content">
+                     <h4>Ortalama Sipariş</h4>
+                     <div class="summary-value" id="averageOrder">0.00 TL</div>
+                 </div>
+             </div>
+             <div class="summary-card">
+                 <div class="summary-icon">
+                     <i class="fas fa-users"></i>
+                 </div>
+                 <div class="summary-content">
+                     <h4>Aktif Masalar</h4>
+                     <div class="summary-value" id="activeTables">0</div>
+                 </div>
+             </div>
+         </div>
+
+        <!-- Grafik -->
+        <div class="section">
+            <h3><i class="fas fa-chart-bar"></i> Satış Grafiği</h3>
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+                 <!-- Detaylı Tablo -->
+         <div class="section">
+             <h3><i class="fas fa-table"></i> Detaylı Satış Raporu</h3>
+             <div class="table-container">
+                 <table class="data-table">
+                     <thead>
+                         <tr>
+                             <th>Masa</th>
+                             <th>Ürün Sayısı</th>
+                             <th>Toplam</th>
+                             <th>Tarih</th>
+                             <th>Durum</th>
+                         </tr>
+                     </thead>
+                     <tbody id="salesTableBody">
+                         <!-- Veriler JavaScript ile doldurulacak -->
+                     </tbody>
+                 </table>
+             </div>
+         </div>
+
+                 <!-- Ürün Analizi -->
+         <div class="section">
+             <h3><i class="fas fa-chart-pie"></i> En Çok Satan Ürünler</h3>
+             <div class="product-analysis">
+                 <div class="chart-container">
+                     <canvas id="topProductsChart"></canvas>
+                 </div>
+                 <div class="product-list" id="topProductsList">
+                     <!-- En çok satan ürünler listesi -->
+                 </div>
+             </div>
+         </div>
+
+        <!-- Masa Analizi -->
+        <div class="section">
+            <h3><i class="fas fa-chair"></i> Masa Performansı</h3>
+            <div class="table-performance">
+                <div id="tablePerformance">
+                    <!-- Masa performans kartları -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="raporlar.js"></script>
+</body>
+</html>
