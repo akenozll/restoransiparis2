@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "Masa 1",
+    "status": "boş"
+  },
+  {
+    "id": 2,
+    "name": "Masa 2",
+    "status": "boş"
+  },
+  {
+    "id": 3,
+    "name": "Masa 3",
+    "status": "boş"
+  },
+  {
+    "id": 4,
+    "name": "Bahçe-1",
+    "status": "boş"
+  }
+]

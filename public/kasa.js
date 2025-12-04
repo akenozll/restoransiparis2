@@ -1,11 +1,13 @@
 // API Base URL - Test için localhost kullan
 const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://your-backend-url.onrender.com';
+const ADMIN_TOKEN = 'changeme-safe-admin-token';
 
 // Kasa Panel JavaScript
 class KasaPanel {
     constructor() {
         this.socket = io(API_BASE_URL);
         this.orders = [];
+        this.masalar = [];
         this.selectedOrder = null;
         this.currentFilter = 'hazir';
         
@@ -16,6 +18,7 @@ class KasaPanel {
         this.setupSocketListeners();
         this.setupEventListeners();
         this.loadInitialData();
+        this.loadMasalar();
     }
     
     setupSocketListeners() {
@@ -235,9 +238,10 @@ class KasaPanel {
             fetch(`${API_BASE_URL}/api/orders/${order.id}/status`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${ADMIN_TOKEN}`
                 },
-                body: JSON.stringify({ status: 'odendi' })
+                body: JSON.stringify({ status: 'odendi', paymentTimestamp: new Date().toISOString() })
             })
             .then(response => response.json())
             .then(updatedOrder => {
@@ -293,6 +297,91 @@ class KasaPanel {
         `;
         
         modal.style.display = 'block';
+    }
+
+    loadMasalar() {
+        fetch(`${API_BASE_URL}/api/masalar`)
+            .then(r=>r.json())
+            .then(masalar=>{
+                this.masalar = masalar;
+                this.renderMasaListesi();
+            });
+        // Gerçek zamanlı güncelleme (Socket)
+        this.socket.on('masaData', (masalar) => {
+            this.masalar = masalar;
+            this.renderMasaListesi();
+        });
+    }
+    renderMasaListesi() {
+        const grid = document.getElementById('masaGrid');
+        const warning = document.getElementById('masaSilWarning');
+        warning.textContent = '';
+        if (!grid) return;
+        grid.innerHTML = '';
+        this.masalar.forEach(masa => {
+            const card = document.createElement('div');
+            card.className = 'masa-item' + (masa.status === 'dolu' ? ' dolu' : '');
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.alignItems = 'center';
+            card.style.justifyContent = 'center';
+            card.style.gap = '8px';
+            card.style.background = masa.status==='dolu' ? 'linear-gradient(135deg,#ffe6e6,#ffc1c1)' : 'linear-gradient(135deg,#e6ffe6,#c1ffd7)';
+            card.style.border = masa.status==='dolu' ? '2px solid #e53e3e':'2px solid #38a169';
+            card.style.borderRadius = '18px';
+            card.style.boxShadow = '0 2px 8px rgba(0,0,0,0.09)';
+            card.style.padding = '20px 12px';
+            card.style.margin = '6px';
+            card.style.width = '100%';
+            card.style.maxWidth = '170px';
+            card.innerHTML = `<span style="font-weight:700;font-size:1.13em;">${masa.name}</span> <span style="color:${masa.status==='dolu'?'#e53e3e':'#38a169'};font-weight:600;">${masa.status==='dolu'?'DOLU':'BOŞ'}</span>`;
+            const btn = document.createElement('button');
+            btn.textContent = "Sil";
+            btn.className = masa.status==='dolu' ? 'btn btn-danger btn-small' : 'btn btn-primary btn-small';
+            btn.style.width = '80px';
+            btn.disabled = masa.status==='dolu';
+            btn.onclick = () => this.gosterSilModal(masa.id, masa.name);
+            card.appendChild(btn);
+            grid.appendChild(card);
+        });
+    }
+    gosterSilModal(id, name) {
+        silinecekMasaId = id;
+        silinecekMasaName = name;
+        document.getElementById('deleteMasaText').innerHTML = `<b>${name}</b> masasını silmek istediğinize emin misiniz? <br>Bu işlem geri alınamaz.`;
+        document.getElementById('deleteMasaModal').style.display = 'block';
+    }
+    kapatSilModal() {
+        silinecekMasaId = null;
+        silinecekMasaName = null;
+        document.getElementById('deleteMasaModal').style.display = 'none';
+    }
+    silMasaWithModal() {
+        if (!silinecekMasaId) return this.kapatSilModal();
+        const warning = document.getElementById('masaSilWarning');
+        warning.textContent = '';
+        const confirmBtn = document.getElementById('deleteMasaConfirmBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Siliniyor...';
+        fetch(`${API_BASE_URL}/api/masalar/${silinecekMasaId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+        })
+        .then(async res => {
+            let result = null;
+            try { result = await res.json(); }
+            catch { result = {error: 'Sunucu JSON döndüremedi!'} }
+            if(!res.ok) throw new Error(result.error||'Masa silinemedi');
+            this.loadMasalar();
+            this.kapatSilModal();
+        })
+        .catch(err => {
+            warning.textContent = err.message;
+        })
+        .finally(()=>{
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Sil';
+        });
     }
 }
 
@@ -352,6 +441,63 @@ function printReceipt() {
 
 // Panel başlatma
 let kasaPanel;
+let silinecekMasaId = null;
+let silinecekMasaName = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     kasaPanel = new KasaPanel();
+
+    // Masa ekle FAB/Modal
+    const fab = document.getElementById('addMasaFab');
+    const modal = document.getElementById('addMasaModal');
+    const saveBtn = document.getElementById('addMasaSaveBtn');
+    const cancelBtn = document.getElementById('addMasaCancelBtn');
+    const input = document.getElementById('yeniMasaAdi');
+    const warning = document.getElementById('masaAddWarning');
+
+    if (fab) fab.onclick = () => {
+        modal.style.display = 'block';
+        warning.textContent = '';
+        input.value = '';
+    };
+    if (cancelBtn) cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+        input.value = '';
+        warning.textContent = '';
+    };
+    if (saveBtn) saveBtn.onclick = async () => {
+        warning.textContent = '';
+        const masaAdi = input.value.trim();
+        if (!masaAdi) {
+            warning.textContent = 'Masa adı zorunlu!'; return;
+        }
+        saveBtn.disabled = true;
+        warning.textContent = 'Kaydediliyor...';
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/masalar/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
+                body: JSON.stringify({ name: masaAdi })
+            });
+            let sonuc = null;
+            try { sonuc = await resp.json(); }
+            catch { sonuc = { error: 'Sunucu JSON döndüremedi!' }; }
+            if (!resp.ok || !sonuc.success) {
+                warning.textContent = sonuc.error || 'Masa eklenemedi.'; return;
+            }
+            modal.style.display = 'none';
+            input.value = '';
+            warning.textContent = '';
+            kasaPanel.loadMasalar();
+        } catch (e) {
+            warning.textContent = "Bir hata oluştu: " + (e.message || e);
+        }
+        saveBtn.disabled = false;
+    }
+
+    // MASA SİL MODAL BUTTON EVENTS
+    const silCancel = document.getElementById('deleteMasaCancelBtn');
+    const silConfirm = document.getElementById('deleteMasaConfirmBtn');
+    silCancel && (silCancel.onclick = () => kasaPanel.kapatSilModal());
+    silConfirm && (silConfirm.onclick = () => kasaPanel.silMasaWithModal());
 });

@@ -127,10 +127,64 @@ document.addEventListener('DOMContentLoaded', function() {
             item.style.transform = 'translateX(0)';
         }, index * 100);
     });
+
+    // Menümüz - Public listeleme
+    initPublicMenu();
 });
 
 // API Base URL - Test için localhost kullan
 const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://your-backend-url.onrender.com';
+
+async function initPublicMenu() {
+    const yemekGrid = document.getElementById('homepageYemekGrid');
+    const icecekGrid = document.getElementById('homepageIcecekGrid');
+    if (!yemekGrid || !icecekGrid) return; // sayfada bölüm yoksa çık
+
+    // Sekme geçişleri
+    const tabY = document.getElementById('hpTabYemekler');
+    const tabI = document.getElementById('hpTabIcecekler');
+    const paneY = document.getElementById('hp-yemekler');
+    const paneI = document.getElementById('hp-icecekler');
+    if (tabY && tabI && paneY && paneI) {
+        tabY.addEventListener('click', () => {
+            tabY.classList.add('active'); tabI.classList.remove('active');
+            paneY.classList.add('active'); paneI.classList.remove('active');
+        });
+        tabI.addEventListener('click', () => {
+            tabI.classList.add('active'); tabY.classList.remove('active');
+            paneI.classList.add('active'); paneY.classList.remove('active');
+        });
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/menu`);
+        const menu = await res.json();
+        renderPublicMenuList(menu?.yemekler || [], yemekGrid);
+        renderPublicMenuList(menu?.icecekler || [], icecekGrid);
+    } catch (e) {
+        yemekGrid.innerHTML = '<div class="empty-message">Menü yüklenemedi.</div>';
+        icecekGrid.innerHTML = '';
+    }
+}
+
+function renderPublicMenuList(items, gridEl) {
+    gridEl.innerHTML = '';
+    if (!items.length) {
+        gridEl.innerHTML = '<div class="empty-message">Bu kategoride ürün yok.</div>';
+        return;
+    }
+    items.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'menu-item';
+        const price = typeof p.price === 'number' ? p.price.toFixed(2) : (parseFloat(p.price)||0).toFixed(2);
+        card.innerHTML = `
+            <h4>${p.name}</h4>
+            <div class="price">${price} TL</div>
+            ${p.category ? `<div class="category">${p.category}</div>` : ''}
+        `;
+        gridEl.appendChild(card);
+    });
+}
 
 // Kullanıcı oturum kontrolü
 function checkUserSession() {
@@ -194,8 +248,14 @@ function navigateToPanel(panel) {
         return;
     }
     
-    // Normal kullanıcı garson ve mutfak paneline erişebilir
-    if (panel === 'garson' || panel === 'mutfak') {
+    // Normal kullanıcı (user) garson ve mutfak paneline erişebilir
+    if (user.role === 'user' && (panel === 'garson' || panel === 'mutfak')) {
+        window.location.href = `/${panel}`;
+        return;
+    }
+    
+    // Garson kullanıcısı da garson ve mutfak paneline erişebilir
+    if (user.role === 'garson' && (panel === 'garson' || panel === 'mutfak')) {
         window.location.href = `/${panel}`;
         return;
     }

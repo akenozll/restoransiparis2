@@ -20,16 +20,57 @@
             <div class="cashier-layout">
                 <!-- Sol Panel - Aktif Siparişler -->
                 <div class="left-panel">
-                    <div class="section">
-                        <h3><i class="fas fa-receipt"></i> Ödeme Bekleyen Siparişler</h3>
-                        <div class="order-filters">
-                            <button class="filter-btn active" data-status="hazir">Hazır</button>
-                            <button class="filter-btn" data-status="odendi">Ödendi</button>
+                    <div class="section" style="display:flex;align-items:center;gap:18px;margin-bottom:6px;">
+                        <h3 style="margin:0;"><i class="fas fa-receipt"></i> Ödeme Bekleyen Siparişler</h3>
+                        <button id="addMasaFab" class="btn btn-primary" style="border-radius:30px;padding:7px 18px 7px 13px;font-size:1.15rem;display:flex;align-items:center;gap:5px;">
+                            <i class="fas fa-plus"></i> Masa Ekle
+                        </button>
+                    </div>
+                    <!-- MASA EKLE MODAL -->
+                    <div class="modal" id="addMasaModal" style="display:none;">
+                        <div class="modal-content" style="max-width:350px;margin:auto;">
+                            <div class="modal-header"><h3>Yeni Masa Ekle</h3></div>
+                            <div class="modal-body">
+                                <label>Masa Adı:</label>
+                                <input id="yeniMasaAdi" type="text" class="input-lg" style="margin:10px 0 16px 0;width:100%;" placeholder="Ör: Bahçe-1" />
+                                <div id="masaAddWarning" style="color:#b91c1c;font-weight:bold;"></div>
+                            </div>
+                            <div class="modal-footer" style="display:flex;gap:8px;justify-content:center;">
+                                <button class="btn btn-primary" id="addMasaSaveBtn">Kaydet</button>
+                                <button class="btn btn-secondary" id="addMasaCancelBtn">İptal</button>
+                            </div>
                         </div>
-                        
-                        <div class="payment-orders" id="paymentOrders">
-                            <!-- Ödeme bekleyen siparişler dinamik olarak yüklenecek -->
+                    </div>
+                    <!-- MASA SİL MODAL -->
+                    <div class="modal" id="deleteMasaModal" style="display:none;">
+                        <div class="modal-content" style="max-width:350px;margin:auto;">
+                            <div class="modal-header"><h3><i class="fas fa-trash"></i> Masa Sil</h3></div>
+                            <div class="modal-body">
+                                <div id="deleteMasaText" style="font-size:1.08em;line-height:1.7;margin:10px 0;"></div>
+                            </div>
+                            <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+                                <button class="btn btn-secondary" id="deleteMasaCancelBtn">Vazgeç</button>
+                                <button class="btn btn-danger" id="deleteMasaConfirmBtn">Sil</button>
+                            </div>
                         </div>
+                    </div>
+                    <style>
+                        .btn-masa-sil {
+                            margin-left:8px; background:none; border:none; color:#e53e3e; font-size:1em;cursor:pointer;padding:2px 6px 2px 2px;transition:.18s;border-radius:50%;}
+                        .btn-masa-sil:hover { background:#fff5f5; }
+                    </style>
+                    <div class="section" id="masalarSection" style="margin-top: 16px;">
+                        <h3><i class="fas fa-table"></i> Masalar</h3>
+                        <div id="masaGrid" class="masa-grid"></div>
+                        <div id="masaSilWarning" style="color:#b91c1c;font-weight:bold;margin-top:10px;"></div>
+                    </div>
+                    <div class="order-filters">
+                        <button class="filter-btn active" data-status="hazir">Hazır</button>
+                        <button class="filter-btn" data-status="odendi">Ödendi</button>
+                    </div>
+                    
+                    <div class="payment-orders" id="paymentOrders">
+                        <!-- Ödeme bekleyen siparişler dinamik olarak yüklenecek -->
                     </div>
                 </div>
 
@@ -101,5 +142,111 @@
     <script src="kasa.js"></script>
 </body>
 </html>
+
+<style>
+/* Modal Genel */
+#addMasaModal .modal-content {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 22px;
+  box-shadow: 0 10px 40px 0 rgba(30,32,50,.18), 0 1.5px 0.5px rgba(100,100,191,.09);
+  padding: 38px 30px 30px 30px;
+  max-width:360px;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  backdrop-filter: blur(13px);
+}
+#addMasaModal .modal-header h3 {
+  color: #222d49;
+  font-size: 1.25rem;
+  font-weight: 750;
+  margin: 0 0 20px 0;
+  letter-spacing: .01em;
+  text-align: center;
+}
+#addMasaModal label {
+  display: block;
+  font-size: 1.08em;
+  color: #6e7990;
+  font-weight: 600;
+  margin-bottom: 9px;
+  margin-top: 12px;
+  text-align:left;
+}
+#addMasaModal input[type="text"] {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 11px;
+  border: 1.3px solid #e1e5ef;
+  background: #f8fafc;
+  font-size: 1em;
+  color: #191b1e;
+  margin-bottom: 12px;
+  transition: border-color .14s;
+  outline:none;
+  box-sizing: border-box;
+}
+#addMasaModal input[type="text"]:focus {
+  border-color: #6c6be6;
+  background: #fff;
+}
+#addMasaModal .modal-footer {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 15px;
+}
+#addMasaSaveBtn {
+  background: linear-gradient(90deg,#9f72ec 0%,#45b2f8 100%);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.08em;
+  border-radius: 13px;
+  padding: 13px 36px;
+  box-shadow: 0 4px 16px rgba(110,170,245,.08);
+  letter-spacing: 0.5px;
+  transition: background .2s, box-shadow .18s;
+}
+#addMasaSaveBtn:hover { background: linear-gradient(90deg,#8469f1 0%,#35a2f1 100%);  box-shadow: 0 6px 18px rgba(148,110,245,.15); }
+
+#addMasaCancelBtn {
+  background: #373b46;
+  color: #eaf0fb;
+  border-radius: 13px;
+  border: none;
+  font-weight: 700;
+  font-size: 1.08em;
+  padding: 13px 36px;
+  letter-spacing: 0.4px;
+  transition: background .2s, color .2s;
+}
+#addMasaCancelBtn:hover { background: #22242a; color: #fff; }
+
+#addMasaModal input[type="text"]::placeholder {
+  color: #b0b9ce;
+  font-weight: 400;
+}
+#masaAddWarning {
+  font-size: 0.99em;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding: 2px 6px;
+  background: #fdebec;
+  border-radius: 7px;
+  color: #c83f49;
+  text-align: center;
+  font-weight: 550;
+  min-height: 18px;
+  transition: background .13s; 
+}
+@media (max-width:500px) {
+  #addMasaModal .modal-content {
+    padding: 22px 7vw 18px 7vw;
+    max-width:97vw;
+  }
+  #addMasaModal .modal-footer button {
+    min-width:110px;
+  }
+}
+</style>
 
 

@@ -143,7 +143,7 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosy
 
 Proje hakkında sorularınız için:
 - **Email**: [email protected]
-- **GitHub**: [Proje Sayfası](https://github.com/username/restoran-siparis-sistemi)
+- **GitHub**: [Proje Sayfası](https://github.com/aken/restoran-siparis-sistemi)
 
 ---
 

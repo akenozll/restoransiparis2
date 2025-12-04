@@ -81,18 +81,32 @@ class MutfakPanel {
     }
     
     renderOrders() {
-        const activeOrders = document.getElementById('activeOrders');
-        const filteredOrders = this.orders.filter(order => order.status === this.currentFilter);
+        const mutfaktaOrders = document.getElementById('mutfaktaOrders');
+        const hazirlaniyorOrders = document.getElementById('hazirlaniyorOrders');
+        const hazirOrders = document.getElementById('hazirOrders');
         
-        if (filteredOrders.length === 0) {
-            activeOrders.innerHTML = '<p class="empty-message">Bu durumda sipariş bulunamadı</p>';
-            return;
-        }
+        // Her tipi filtrele
+        const mutfaktaArr = this.orders.filter(order => order.status === 'mutfakta');
+        const hazirlaniyorArr = this.orders.filter(order => order.status === 'hazirlaniyor');
+        const hazirArr = this.orders.filter(order => order.status === 'hazir');
         
-        activeOrders.innerHTML = '';
-        filteredOrders.forEach(order => {
-            const orderCard = this.createOrderCard(order);
-            activeOrders.appendChild(orderCard);
+        // Mutfakta
+        mutfaktaOrders.innerHTML = mutfaktaArr.length === 0 ? '<p class="empty-message">Bu durumda sipariş yok</p>' : '';
+        mutfaktaArr.forEach(order => {
+            const card = this.createOrderCard(order);
+            mutfaktaOrders.appendChild(card);
+        });
+        // Hazırlanıyor
+        hazirlaniyorOrders.innerHTML = hazirlaniyorArr.length === 0 ? '<p class="empty-message">Bu durumda sipariş yok</p>' : '';
+        hazirlaniyorArr.forEach(order => {
+            const card = this.createOrderCard(order);
+            hazirlaniyorOrders.appendChild(card);
+        });
+        // Hazır
+        hazirOrders.innerHTML = hazirArr.length === 0 ? '<p class="empty-message">Bu durumda sipariş yok</p>' : '';
+        hazirArr.forEach(order => {
+            const card = this.createOrderCard(order);
+            hazirOrders.appendChild(card);
         });
     }
     
@@ -245,10 +259,12 @@ class MutfakPanel {
     updateOrderStatus(newStatus) {
         if (!this.selectedOrder) return;
         
+        const ADMIN_TOKEN = 'changeme-safe-admin-token';
         fetch(`${API_BASE_URL}/api/orders/${this.selectedOrder.id}/status`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${ADMIN_TOKEN}`
             },
             body: JSON.stringify({ status: newStatus })
         })
@@ -331,6 +347,18 @@ function closeCompletedModal() {
     document.getElementById('completedModal').style.display = 'none';
 }
 
+// Ürün ekleme modal logic
+function openProductModal() {
+    document.getElementById('addProductModal').style.display = 'block';
+    document.getElementById('yeniProductName').focus();
+    document.getElementById('addProductWarning').textContent = '';
+}
+function closeProductModal() {
+    document.getElementById('addProductModal').style.display = 'none';
+    document.getElementById('productAddForm').reset();
+    document.getElementById('addProductWarning').textContent = '';
+}
+
 // CSS Animasyonları
 const style = document.createElement('style');
 style.textContent = `
@@ -349,4 +377,44 @@ document.head.appendChild(style);
 let mutfakPanel;
 document.addEventListener('DOMContentLoaded', function() {
     mutfakPanel = new MutfakPanel();
+    // --- Ürün ekleme FAB/modal eventleri kesin DOM yüklendikten sonra ---
+    const fabBtn = document.getElementById('addProductFab');
+    const cancelBtn = document.getElementById('addProductCancelBtn');
+    const saveBtn = document.getElementById('addProductSaveBtn');
+    if(fabBtn) fabBtn.onclick = openProductModal;
+    else console.warn('[FAB] Yeni Ürün Ekle butonu bulunamadı.');
+    if(cancelBtn) cancelBtn.onclick = function(e){ e.preventDefault(); closeProductModal(); };
+    else console.warn('[MODAL] İptal butonu yok.');
+    if(saveBtn) saveBtn.onclick = async function(e){
+        e.preventDefault();
+        const name = document.getElementById('yeniProductName').value.trim();
+        const price = parseFloat(document.getElementById('yeniProductPrice').value);
+        const category = document.getElementById('yeniProductCategory').value;
+        const stock = parseInt(document.getElementById('yeniProductStock').value)||undefined;
+        const desc = document.getElementById('yeniProductDesc').value.trim();
+        const warn = document.getElementById('addProductWarning');
+        if(!name || !price || price<=0 || !category) {
+            warn.textContent = 'Lütfen gerekli tüm alanları eksiksiz ve doğru doldurun!';
+            return;
+        }
+        saveBtn.disabled = true;
+        warn.textContent = 'Kaydediliyor...';
+        try {
+            const ADMIN_TOKEN = 'changeme-safe-admin-token';
+            const resp = await fetch(`${API_BASE_URL}/api/stock/add-product`,{
+                method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${ADMIN_TOKEN}`},
+                body: JSON.stringify({name,category,price,stock,minStock:10,description:desc})
+            });
+            const result = await resp.json();
+            if(result && result.success) {
+                warn.textContent = '';
+                closeProductModal();
+                mutfakPanel && mutfakPanel.showNotification('Ürün başarıyla eklendi!');
+            } else {
+                warn.textContent = 'Kayıt sırasında hata: ' + (result.message || '');
+            }
+        } catch(err) { warn.textContent = 'Bir ağ/yazılım hatası oluştu'; }
+        saveBtn.disabled = false;
+    };
+    else console.warn('[MODAL] Kaydet butonu yok.');
 });

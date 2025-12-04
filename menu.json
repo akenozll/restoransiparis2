@@ -1,0 +1,23 @@
+{
+  "yemekler": [
+    {
+      "id": 1761822074935,
+      "name": "Pizza",
+      "category": "yemek",
+      "price": 270,
+      "stock": 15,
+      "minStock": 10,
+      "description": ""
+    },
+    {
+      "id": 1764765933089,
+      "name": "Lahmacun",
+      "category": "yemek",
+      "price": 220,
+      "stock": 99,
+      "minStock": 10,
+      "description": "Lahmacun"
+    }
+  ],
+  "icecekler": []
+}

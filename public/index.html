@@ -4,8 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Sipariş Yönetim Sistemi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Yeni Kart Stili */
+        .policy-card-container {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-top: 20px;
+        }
+
+        @media (min-width: 768px) {
+          .policy-card-container {
+            flex-direction: row;
+            justify-content: center;
+          }
+        }
+
+        .policy-card {
+          display: flex;
+          align-items: center;
+          background: #ffffff10;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 14px;
+          padding: 14px 18px;
+          cursor: pointer;
+          transition: all 0.25s ease-in-out;
+          backdrop-filter: blur(6px);
+          flex: 1;
+          min-width: 260px;
+        }
+
+        .policy-card:hover {
+          background: #ffffff20;
+          transform: translateY(-3px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .policy-icon {
+          font-size: 2rem;
+          margin-right: 14px;
+        }
+
+        .policy-text h4 {
+          margin: 0;
+          color: #fff;
+          font-weight: 600;
+          font-size: 1rem;
+        }
+
+        .policy-text p {
+          margin: 4px 0 0;
+          color: #ccc;
+          font-size: 0.85rem;
+        }
+
+        .footer-bottom {
+          text-align: center;
+          color: #aaa;
+          font-size: 0.9rem;
+          margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -22,21 +86,62 @@
                     <p>Sisteme erişmek için giriş yapın</p>
                 </div>
 
-                <!-- Giriş Formu -->
-                <div class="auth-form active" id="loginForm">
-                    <form id="loginFormElement">
-                        <div class="form-group">
-                            <label for="loginUsername">Kullanıcı Adı</label>
-                            <input type="text" id="loginUsername" name="username" required>
+                <!-- Giriş Formu Kartı -->
+                <div class="auth-form-card">
+                    <div class="auth-form active" id="loginForm">
+                        <form id="loginFormElement">
+                            <div class="form-group">
+                                <label for="loginUsername">Kullanıcı Adı</label>
+                                <input type="text" id="loginUsername" name="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Şifre</label>
+                                <input type="password" id="loginPassword" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-large">
+                                <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                            </button>
+                        </form>
+                    </div>
+                <!-- MENÜMÜZ BÖLÜMÜ -->
+                <div class="section" style="margin-top:30px;">
+                    <h3><i class="fas fa-utensils"></i> Menümüz</h3>
+                    <div class="menu-tabs">
+                        <button class="tab-btn active" data-tab="hp-yemekler" id="hpTabYemekler">Yemekler</button>
+                        <button class="tab-btn" data-tab="hp-icecekler" id="hpTabIcecekler">İçecekler</button>
+                    </div>
+                    <div class="menu-content">
+                        <div class="tab-content active" id="hp-yemekler">
+                            <div class="menu-grid" id="homepageYemekGrid"></div>
                         </div>
-                        <div class="form-group">
-                            <label for="loginPassword">Şifre</label>
-                            <input type="password" id="loginPassword" name="password" required>
+                        <div class="tab-content" id="hp-icecekler">
+                            <div class="menu-grid" id="homepageIcecekGrid"></div>
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt"></i> Giriş Yap
-                        </button>
-                    </form>
+                    </div>
+                </div>
+                </div>
+                </main>
+                </div>
+
+                    <!-- Kartlar: Form Kartının Altında -->
+                    
+                </div>
+            </div>
+            <div class="policy-card-container">
+                <div class="policy-card" onclick="window.location.href='gizlilik.html'">
+                    <div class="policy-icon">🛡️</div>
+                    <div class="policy-text">
+                        <h4>Gizlilik Politikası</h4>
+                        <p>Veri güvenliği ve gizlilik kurallarımız hakkında bilgi alın.</p>
+                    </div>
+                </div>
+
+                <div class="policy-card" onclick="window.location.href='kullanim.html'">
+                    <div class="policy-icon">📜</div>
+                    <div class="policy-text">
+                        <h4>Kullanım Klavuzu</h4>
+                        <p>Sistemi kullanırken geçerli olan kuralları okuyun.</p>
+                    </div>
                 </div>
             </div>
 
@@ -52,7 +157,6 @@
                 <div class="card-grid" id="cardGrid">
                     <!-- Üst Sıra: Garson, Mutfak, Kasa -->
                     <div class="card-row">
-                        <!-- Garson Paneli (Normal Kullanıcı + Admin) -->
                         <div class="card" onclick="navigateToPanel('garson')">
                             <div class="card-icon">
                                 <i class="fas fa-user-tie"></i>
@@ -64,7 +168,6 @@
                             </div>
                         </div>
 
-                        <!-- Mutfak Paneli (Normal Kullanıcı + Admin) -->
                         <div class="card" onclick="navigateToPanel('mutfak')">
                             <div class="card-icon">
                                 <i class="fas fa-fire"></i>
@@ -76,11 +179,10 @@
                             </div>
                         </div>
 
-                        <!-- Kasa Paneli (Sadece Admin) -->
                         <div class="card admin-only" onclick="navigateToPanel('kasa')">
                             <div class="card-icon">
                                 <i class="fas fa-cash-register"></i>
-                            </div>
+                        </div>
                             <h3>Kasa Paneli</h3>
                             <p>Ödeme alma ve hesap yönetimi</p>
                             <div class="card-arrow">
@@ -89,9 +191,7 @@
                         </div>
                     </div>
 
-                    <!-- Alt Sıra: Stok Yönetimi, Raporlar -->
                     <div class="card-row">
-                        <!-- Stok Yönetimi Paneli (Sadece Admin) -->
                         <div class="card admin-only" onclick="navigateToPanel('stok')">
                             <div class="card-icon">
                                 <i class="fas fa-boxes"></i>
@@ -103,7 +203,6 @@
                             </div>
                         </div>
 
-                        <!-- Raporlar Paneli (Sadece Admin) -->
                         <div class="card admin-only" onclick="navigateToPanel('raporlar')">
                             <div class="card-icon">
                                 <i class="fas fa-chart-line"></i>
@@ -118,32 +217,46 @@
                 </div>
 
                 <div class="features">
-                    <h2>Sistem Özellikleri</h2>
-                    <div class="feature-list">
-                        <div class="feature-item">
-                            <i class="fas fa-bolt"></i>
-                            <span>Gerçek zamanlı sipariş takibi</span>
+                    
+                </div>
+
+                <!-- MENÜMÜZ BÖLÜMÜ -->
+                <div class="section" style="margin-top:30px;">
+                    <h3><i class="fas fa-utensils"></i> Menümüz</h3>
+                    <div class="menu-tabs">
+                        <button class="tab-btn active" data-tab="hp-yemekler" id="hpTabYemekler">Yemekler</button>
+                        <button class="tab-btn" data-tab="hp-icecekler" id="hpTabIcecekler">İçecekler</button>
+                    </div>
+                    <div class="menu-content">
+                        <div class="tab-content active" id="hp-yemekler">
+                            <div class="menu-grid" id="homepageYemekGrid"></div>
                         </div>
-                        <div class="feature-item">
-                            <i class="fas fa-clock"></i>
-                            <span>Renk kodlu zaman takibi</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-mobile-alt"></i>
-                            <span>Mobil uyumlu tasarım</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Detaylı raporlama</span>
+                        <div class="tab-content" id="hp-icecekler">
+                            <div class="menu-grid" id="homepageIcecekGrid"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
 
-        <footer class="footer">
-            <p>&copy; 2024 Restoran Sipariş Sistemi. Tüm hakları saklıdır.</p>
-        </footer>
+        <footer class="custom-footer">
+            <div class="footer-content">
+              <h2 class="footer-title">Restoran Sipariş Sistemi</h2>
+              <p class="footer-subtitle">Hızlı • Güvenli • Lezzetli</p>
+          
+              <div class="social-icons">
+                <a href="https://instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="https://youtube.com/" target="_blank"><i class="fab fa-youtube"></i></a>
+              </div>
+          
+              <hr />
+          
+              <p class="footer-bottom">
+                © 2025 Restoran Sipariş Sistemi — Tüm hakları saklıdır.
+              </p>
+            </div>
+          </footer>
+          
     </div>
 
     <!-- Bildirim Modal -->

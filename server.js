@@ -5,6 +5,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const moment = require('moment');
+const fs = require('fs');
 
 
 const app = express();
@@ -33,104 +34,40 @@ app.use((req, res, next) => {
   next();
 });
 
-// Veri saklama (gerçek uygulamada veritabanı kullanılır)
-let orders = [
-  {
-    id: 1,
-    masaName: 'Masa 1',
-    items: [
-      { name: 'Kebap', price: 45, quantity: 2 },
-      { name: 'Su', price: 5, quantity: 2 }
-    ],
-    total: 100,
-    status: 'tamamlandi',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 gün önce
-    aciklama: 'Soslu kebap'
-  },
-  {
-    id: 2,
-    masaName: 'Masa 2',
-    items: [
-      { name: 'Pide', price: 35, quantity: 1 },
-      { name: 'Çay', price: 8, quantity: 2 }
-    ],
-    total: 51,
-    status: 'tamamlandi',
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 saat önce
-    aciklama: ''
-  },
-  {
-    id: 3,
-    masaName: 'Masa 3',
-    items: [
-      { name: 'Lahmacun', price: 25, quantity: 3 },
-      { name: 'Ayran', price: 10, quantity: 3 }
-    ],
-    total: 105,
-    status: 'hazir',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 saat önce
-    aciklama: ''
-  },
-  {
-    id: 4,
-    masaName: 'Masa 1',
-    items: [
-      { name: 'Salata', price: 30, quantity: 1 },
-      { name: 'Kahve', price: 12, quantity: 2 }
-    ],
-    total: 54,
-    status: 'mutfakta',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 saat önce
-    aciklama: 'Ekstra zeytinyağı'
-  },
-  {
-    id: 5,
-    masaName: 'Masa 4',
-    items: [
-      { name: 'Kebap', price: 45, quantity: 1 },
-      { name: 'Kola', price: 15, quantity: 1 }
-    ],
-    total: 60,
-    status: 'hazirlaniyor',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 saat önce
-    aciklama: ''
-  }
-];
+// Tüm demo siparişler, demo menü ürünlerini kaldırıyoruz - gerçek kullanım için BOŞ veriyle başlasın!
+const DATA_DIR = __dirname;
+const MENU_PATH = path.join(DATA_DIR, 'menu.json');
+const ORDERS_PATH = path.join(DATA_DIR, 'orders.json');
+const MASALAR_PATH = path.join(DATA_DIR, 'masalar.json');
+
+function loadJsonSync(path, def) {
+  try {
+    if(fs.existsSync(path)) return JSON.parse(fs.readFileSync(path, 'utf-8'));
+    fs.writeFileSync(path, JSON.stringify(def));
+    return def;
+  } catch(e){ console.error('Dosya okuma hatası:', path, e); return def; }
+}
+function saveJsonSync(path, obj) {
+  try { fs.writeFileSync(path, JSON.stringify(obj, null, 2)); } catch(e){ console.warn('Dosya yazma hatası:', path, e); }
+}
+function loadJsonSync2(path, def) {
+  try { if(fs.existsSync(path)) return JSON.parse(fs.readFileSync(path, 'utf-8'));
+    fs.writeFileSync(path, JSON.stringify(def)); return def; }
+  catch(e){ console.error('Dosya okuma hatası:', path, e); return def; }
+}
+function saveJsonSync2(path, obj) {
+  try { fs.writeFileSync(path, JSON.stringify(obj, null, 2)); } catch(e){ console.warn('Dosya yazma hatası:', path, e); }
+}
+// Kalıcı veri oku veya oluştur
+let menu = loadJsonSync(MENU_PATH, { yemekler: [], icecekler: [] });
+let orders = loadJsonSync(ORDERS_PATH, []);
+let masalar = loadJsonSync2(MASALAR_PATH, [ { id: 1, name: 'Masa 1', status: 'boş' }, { id: 2, name: 'Masa 2', status: 'boş' } ]);
 
 let users = [
   { id: 1, username: 'isletme123', email: 'isletme@restoran.com', password: 'isletme1235', role: 'user' },
   { id: 2, username: 'admin123', email: 'admin@restoran.com', password: 'admin1235', role: 'admin' }
 ];
 
-
-
-
-
-let menu = {
-  yemekler: [
-    { id: 1, name: 'Kebap', price: 45, category: 'yemek', stock: 50, minStock: 10 },
-    { id: 2, name: 'Pide', price: 35, category: 'yemek', stock: 30, minStock: 8 },
-    { id: 3, name: 'Lahmacun', price: 25, category: 'yemek', stock: 40, minStock: 12 },
-    { id: 4, name: 'Çorba', price: 20, category: 'yemek', stock: 25, minStock: 5 },
-    { id: 5, name: 'Salata', price: 30, category: 'yemek', stock: 35, minStock: 8 }
-  ],
-  icecekler: [
-    { id: 101, name: 'Su', price: 5, category: 'icecek', stock: 100, minStock: 20 },
-    { id: 102, name: 'Çay', price: 8, category: 'icecek', stock: 80, minStock: 25 },
-    { id: 103, name: 'Kahve', price: 12, category: 'icecek', stock: 40, minStock: 8 },
-    { id: 104, name: 'Ayran', price: 10, category: 'icecek', stock: 45, minStock: 10 },
-    { id: 105, name: 'Kola', price: 15, category: 'icecek', stock: 60, minStock: 15 }
-  ]
-};
-
-let masalar = [
-  { id: 1, name: 'Masa 1', status: 'boş' },
-  { id: 2, name: 'Masa 2', status: 'boş' },
-  { id: 3, name: 'Masa 3', status: 'boş' },
-  { id: 4, name: 'Masa 4', status: 'boş' },
-  { id: 5, name: 'Masa 5', status: 'boş' },
-  { id: 6, name: 'Masa 6', status: 'boş' }
-];
 
 // API Routes
 app.get('/api/menu', (req, res) => {
@@ -179,7 +116,22 @@ app.get('/api/orders', (req, res) => {
   res.json(orders);
 });
 
-app.post('/api/orders', (req, res) => {
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'changeme-safe-admin-token';
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization || '';
+  if (!auth.startsWith('Bearer ') || auth.replace('Bearer ', '') !== ADMIN_SECRET) {
+    return res.status(401).json({ error: 'Yetkin yok! (AUTH)' });
+  }
+  next();
+}
+function sanitizeInput(str) {
+  if (typeof str !== 'string') return '';
+  // Temel XSS ve injection koruması: < > / \ ' " & karakterlerini zararsız yap
+  return str.replace(/[<>&"'/\\]/g, '_');
+}
+
+// Sipariş ekle/güncelle kritik --- requireAuth uygulanmalı!
+app.post('/api/orders', requireAuth, (req, res) => {
   const { masaId, items, aciklama } = req.body;
   
   const order = {
@@ -194,6 +146,7 @@ app.post('/api/orders', (req, res) => {
   };
   
   orders.push(order);
+  saveJsonSync(ORDERS_PATH, orders);
   
   // Masa durumunu güncelle
   const masa = masalar.find(m => m.id === masaId);
@@ -208,23 +161,65 @@ app.post('/api/orders', (req, res) => {
   res.json(order);
 });
 
-app.put('/api/orders/:id/status', (req, res) => {
+app.put('/api/orders/:id/status', requireAuth, (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
-  
+  const { status, paymentTimestamp } = req.body;
   const order = orders.find(o => o.id == id);
   if (order) {
     order.status = status;
-    
-    // Gerçek zamanlı güncelleme
+    if (paymentTimestamp) order.paymentTimestamp = paymentTimestamp;
+    // Ödeme bitince ilgili masayı boşalt
+    if (status === 'odendi') {
+      // 1. Masa status 'boş'
+      const masa = masalar.find(m => m.id === order.masaId);
+      if(masa) masa.status = 'boş';
+      saveJsonSync2(MASALAR_PATH, masalar);
+      io.emit('masaData', masalar);
+      // 2. Ürün stoklarını düşür!
+      if (order.items && Array.isArray(order.items)) {
+        const allItems = [...(menu.yemekler||[]), ...(menu.icecekler||[])];
+        for (const siparisUrun of order.items) {
+          const urun = allItems.find(prd => prd.id === siparisUrun.id || prd.name === siparisUrun.name);
+          if (urun) {
+            if (!urun.stock) urun.stock = 100;
+            urun.stock = Math.max(0, urun.stock - (parseInt(siparisUrun.quantity)||1));
+          }
+        }
+        saveJsonSync(MENU_PATH, menu);
+        io.emit('menuData', menu);
+      }
+    }
+    saveJsonSync(ORDERS_PATH, orders);
     io.emit('orderStatusUpdate', { id, status });
-    
     res.json(order);
   } else {
     res.status(404).json({ error: 'Sipariş bulunamadı' });
   }
 });
 
+app.post('/api/clear-data', requireAuth, (req, res) => {
+  try {
+    const { orders: clearOrders, revenue: clearRevenue, productStats: clearProductStats, menu: clearMenu } = req.body;
+    // Siparişleri Temizle
+    if (clearOrders) { orders = []; saveJsonSync(ORDERS_PATH, orders); }
+    // Ürün satış istatistiği global ise temizle (ör: productStats)
+    if (clearProductStats && typeof global.productStats !== 'undefined') global.productStats = [];
+    // Gelir ve ciroyu özel değişkende tutuyorsan, onları da temizle (ör: global.revenue)
+    if (clearRevenue && typeof global.revenue !== 'undefined') global.revenue = 0;
+    // MENÜ temizle
+    if (clearMenu) {
+      if(menu && menu.yemekler) menu.yemekler = [];
+      if(menu && menu.icecekler) menu.icecekler = [];
+      saveJsonSync(MENU_PATH, menu);
+      io.emit('menuData', menu);
+    }
+    res.json({ success: true });
+    io.emit('orderData', orders);
+  } catch (error) {
+    console.error('Temizleme hatası:', error);
+    res.status(500).json({ success: false, message: 'Temizlerken sunucu hatası.' });
+  }
+});
 
 
 // Stok yönetimi API'leri
@@ -280,18 +275,19 @@ app.post('/api/stock/update', (req, res) => {
   }
 });
 
-app.post('/api/stock/add-product', (req, res) => {
+app.post('/api/stock/add-product', requireAuth, (req, res) => {
   try {
     const { name, category, price, stock, minStock, description } = req.body;
     
+    // sanitize
     const newProduct = {
       id: Date.now(),
-      name: name,
-      category: category,
+      name: sanitizeInput(name),
+      category: sanitizeInput(category),
       price: parseFloat(price),
       stock: parseInt(stock) || 100,
       minStock: parseInt(minStock) || 10,
-      description: description || ''
+      description: sanitizeInput(description || '')
     };
     
     // Kategoriye göre menüye ekle
@@ -300,6 +296,7 @@ app.post('/api/stock/add-product', (req, res) => {
     } else {
       menu.icecekler.push(newProduct);
     }
+    saveJsonSync(MENU_PATH, menu);
     
     // Socket.IO ile yeni ürün bildirimi
     io.emit('newProduct', newProduct);
@@ -343,7 +340,43 @@ app.get('/api/stock/report', (req, res) => {
 });
 
 
+// Masa Ekleme Endpoint
+app.post('/api/masalar/add', requireAuth, (req, res) => {
+  try {
+    let name = sanitizeInput(req.body.name || '').trim();
+    if (!name) return res.status(400).json({ error: 'Masa adı zorunlu!' });
+    let newId = masalar.length > 0 ? Math.max(...masalar.map(m => m.id)) + 1 : 1;
+    let yeniMasa = { id: newId, name: name, status: 'boş' };
+    masalar.push(yeniMasa);
+    saveJsonSync2(MASALAR_PATH, masalar);
+    io.emit('masaData', masalar);
+    res.json({ success: true, masa: yeniMasa });
+  } catch (e) {
+    res.status(500).json({ error: 'Masa eklerken hata.' });
+  }
+});
 
+// Masa Silme Endpoint
+app.delete('/api/masalar/:id', requireAuth, (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const masaIndex = masalar.findIndex(m => m.id === id);
+    if (masaIndex === -1) return res.status(404).json({ error: 'Masa bulunamadı!' });
+
+    // Aktif sipariş kontrolü
+    const aktifOrder = orders.find(order => order.masaId === id && order.status !== 'odendi');
+    if (aktifOrder) {
+      return res.status(400).json({ error: 'Bu masada henüz ödenmemiş/aktif sipariş var! Önce siparişi kapatınız.' });
+    }
+
+    masalar.splice(masaIndex, 1);
+    saveJsonSync2(MASALAR_PATH, masalar);
+    io.emit('masaData', masalar);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Masa silmede hata.' });
+  }
+});
 
 
 // Ana sayfa

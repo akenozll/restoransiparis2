@@ -14,11 +14,69 @@ class RaporlarPanel {
     }
     
     init() {
+        // Önce kullanıcı giriş kontrolü yap
+        if (!this.checkUserAuth()) {
+            return;
+        }
+        
         this.setupSocketListeners();
         this.setupEventListeners();
         this.loadInitialData();
         this.loadUserInfo();
         this.toggleCustomDateRange();
+    }
+    
+    checkUserAuth() {
+        const user = localStorage.getItem('user');
+        if (!user) {
+            this.showAuthError();
+            return false;
+        }
+        
+        try {
+            const userData = JSON.parse(user);
+            if (!userData.username || !userData.role) {
+                this.showAuthError();
+                return false;
+            }
+            
+            // Sadece admin kullanıcıları raporlara erişebilir
+            if (userData.role !== 'admin') {
+                this.showAuthError('Bu panele erişim yetkiniz yok! Sadece admin kullanıcıları raporları görüntüleyebilir.');
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Kullanıcı verisi okunamadı:', error);
+            this.showAuthError();
+            return false;
+        }
+    }
+    
+    showAuthError(message = 'Giriş yapmanız gerekiyor!') {
+        // Sayfayı temizle
+        document.body.innerHTML = `
+            <div class="container">
+                <div class="header">
+                    <h1><i class="fas fa-chart-line"></i> Raporlar</h1>
+                </div>
+                <div class="auth-section">
+                    <div class="auth-header">
+                        <h2><i class="fas fa-exclamation-triangle"></i> Erişim Hatası</h2>
+                        <p>${message}</p>
+                    </div>
+                    <div class="auth-form active">
+                        <div style="text-align: center; padding: 20px;">
+                            <p style="color: #f56565; font-size: 1.1rem; margin-bottom: 20px;">Bu panele erişmek için admin yetkisine sahip olmanız gerekiyor.</p>
+                            <a href="/" class="btn btn-primary" style="display: inline-block; text-decoration: none;">
+                                <i class="fas fa-home"></i> Ana Sayfaya Dön
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
     
     setupSocketListeners() {
@@ -148,75 +206,72 @@ class RaporlarPanel {
     generateReport() {
         const timeRange = document.getElementById('timeRange')?.value || 'month';
         const reportType = document.getElementById('reportType')?.value || 'sales';
-        
-        // Tarih filtresi uygula
         const filteredOrders = this.filterOrdersByTimeRange(this.orders, timeRange);
-        
-        // Özet kartları güncelle
-        this.updateSummaryCards(filteredOrders);
-        
-        // Satış grafiği güncelle
-        this.updateSalesChart(filteredOrders, timeRange);
-        
-        // Satış tablosu güncelle
-        this.updateSalesTable(filteredOrders);
-        
-        // Ürün analizi güncelle
-        this.updateProductAnalysis(filteredOrders);
-        
-        // Masa performansı güncelle
-        this.updateTablePerformance(filteredOrders);
+        // Tüm ana bölümleri öncelikle gizle
+        document.querySelectorAll('.report-sales, .report-revenue, .report-products, .report-tables').forEach(div => div.style.display='none');
+        // Seçime göre sadece ilgili bölümü aç
+        if(reportType==='sales') document.querySelector('.report-sales').style.display = 'block';
+        else if(reportType==='revenue') document.querySelector('.report-revenue').style.display = 'block';
+        else if(reportType==='products') document.querySelector('.report-products').style.display = 'block';
+        else if(reportType==='tables') document.querySelector('.report-tables').style.display = 'block';
+        else if(reportType==='all') document.querySelectorAll('.report-sales, .report-revenue, .report-products, .report-tables').forEach(div => div.style.display='block');
+        // Sonra asıl fonksiyon çağrılarını yap
+        if(reportType==='sales'||reportType==='all') {
+            this.updateSummaryCards(filteredOrders);
+            this.updateSalesChart(filteredOrders, timeRange);
+            this.updateSalesTable(filteredOrders);
+        }
+        if(reportType==='products'||reportType==='all') {
+            this.updateProductAnalysis(filteredOrders);
+        }
+        if(reportType==='tables'||reportType==='all') {
+            this.updateTablePerformance(filteredOrders);
+        }
+        if(reportType==='revenue'||reportType==='all') {
+            this.updateSummaryCards(filteredOrders);
+        }
     }
     
     filterOrdersByTimeRange(orders, timeRange) {
         const now = new Date();
-        let startDate = new Date();
-        let endDate = new Date();
-        
+        let startDate = new Date(), endDate = new Date();
         switch (timeRange) {
-            case 'today':
-                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-                endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-                break;
-            case 'week':
-                const dayOfWeek = now.getDay();
-                const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            case 'today': startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0); endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); break;
+            case 'week': const dayOfWeek = now.getDay(); const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
                 startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysToMonday, 0, 0, 0, 0);
-                endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6, 23, 59, 59, 999);
-                break;
-            case 'month':
-                startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-                break;
-            case 'year':
-                startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
-                endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-                break;
+                endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 6, 23, 59, 59, 999); break;
+            case 'month': startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); break;
+            case 'year': startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+                endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999); break;
             case 'custom':
                 const startDateInput = document.getElementById('startDate')?.value;
                 const endDateInput = document.getElementById('endDate')?.value;
-                
-                if (startDateInput && endDateInput) {
-                    startDate = new Date(startDateInput + 'T00:00:00');
-                    endDate = new Date(endDateInput + 'T23:59:59');
-                } else {
-                    return orders;
-                }
+                if (!startDateInput || !endDateInput) return [];
+                startDate = new Date(startDateInput + 'T00:00:00');
+                endDate = new Date(endDateInput + 'T23:59:59');
                 break;
-            default:
-                return orders;
+            default: return orders;
         }
-        
         return orders.filter(order => {
             const orderDate = new Date(order.timestamp);
+            const paymentDate = order.paymentTimestamp ? new Date(order.paymentTimestamp) : null;
+            // Eğer ödendi ise (paymentTimestamp), onu öncelikli date olarak kullan!
+            if(paymentDate) return paymentDate >= startDate && paymentDate <= endDate;
+            // Değilse sipariş oluşturma tarihi filtreye giriyorsa al.
             return orderDate >= startDate && orderDate <= endDate;
         });
     }
     
     updateSummaryCards(orders) {
         const totalOrders = orders.length;
-        const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-        const averageOrder = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : 0;
+        let totalRevenue = orders.reduce((sum, order) => {
+            let orderTotal = typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0;
+            if(isNaN(orderTotal) || !isFinite(orderTotal) || orderTotal < 0) orderTotal = 0;
+            return sum + orderTotal;
+        }, 0);
+        if(!isFinite(totalRevenue) || totalRevenue < 0) totalRevenue = 0;
+        const averageOrder = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : '0.00';
         const activeTables = this.masalar.filter(masa => masa.status === 'dolu').length;
         
         // Özet kartlarını güncelle
@@ -229,20 +284,30 @@ class RaporlarPanel {
         if (totalRevenueEl) totalRevenueEl.textContent = totalRevenue.toFixed(2) + ' TL';
         if (averageOrderEl) averageOrderEl.textContent = averageOrder + ' TL';
         if (activeTablesEl) activeTablesEl.textContent = activeTables;
+        
+        console.log('Rapor hesaplamaları:', {
+            totalOrders,
+            totalRevenue,
+            averageOrder,
+            activeTables,
+            orders: orders.length
+        });
     }
     
     updateSalesChart(orders, timeRange) {
         const canvas = document.getElementById('salesChart');
-        if (!canvas) {
-            console.error('Sales chart canvas bulunamadı');
+        if (!canvas) return;
+        if (this.charts.salesChart) { this.charts.salesChart.destroy(); canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); }
+        if (!orders || !orders.length) {
+            canvas.style.display = 'none';
+            let parent = canvas.parentElement;
+            parent && (parent.innerHTML = '<div class="empty-message">Bu tarih aralığında satış verisi yok.</div>');
             return;
+        } else {
+            canvas.style.display = 'block';
         }
         
         // Mevcut grafik varsa yok et
-        if (this.charts.salesChart) {
-            this.charts.salesChart.destroy();
-        }
-        
         // Tarih grupları oluştur
         const dateGroups = this.groupOrdersByDate(orders, timeRange);
         
@@ -299,6 +364,9 @@ class RaporlarPanel {
             const date = new Date(order.timestamp);
             let key;
             
+            // Order total'ının sayı olduğundan emin ol
+            const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0;
+            
             switch (timeRange) {
                 case 'today':
                     key = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
@@ -322,7 +390,7 @@ class RaporlarPanel {
             if (!groups[key]) {
                 groups[key] = 0;
             }
-            groups[key] += order.total;
+            groups[key] += orderTotal;
         });
         
         // Tarih sırasına göre sırala
@@ -353,26 +421,26 @@ class RaporlarPanel {
     
     updateSalesTable(orders) {
         const tbody = document.getElementById('salesTableBody');
-        if (!tbody) {
-            console.error('Sales table body bulunamadı');
-            return;
-        }
+        if (!tbody) return;
         
         tbody.innerHTML = '';
         
-        if (orders.length === 0) {
+        if (!orders.length) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #2d3748;">Bu tarih aralığında sipariş bulunamadı</td></tr>';
             return;
         }
         
         orders.slice(0, 10).forEach(order => {
+            let orderTotal = typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0;
+            if(isNaN(orderTotal) || !isFinite(orderTotal) || orderTotal<0) orderTotal=0;
             const row = document.createElement('tr');
             const orderDate = new Date(order.timestamp);
+            const itemCount = Array.isArray(order.items) ? order.items.length : 0;
             
             row.innerHTML = `
-                <td>${order.masaName}</td>
-                <td>${order.items.length} ürün</td>
-                <td>${order.total.toFixed(2)} TL</td>
+                <td>${order.masaName || 'Bilinmeyen Masa'}</td>
+                <td>${itemCount} ürün</td>
+                <td>${orderTotal.toFixed(2)} TL</td>
                 <td>${orderDate.toLocaleString('tr-TR')}</td>
                 <td><span class="status-badge ${order.status}">${this.getStatusText(order.status)}</span></td>
             `;
@@ -385,17 +453,28 @@ class RaporlarPanel {
         const productSales = {};
         
         orders.forEach(order => {
-            order.items.forEach(item => {
-                if (!productSales[item.name]) {
-                    productSales[item.name] = { quantity: 0, revenue: 0 };
-                }
-                productSales[item.name].quantity += item.quantity;
-                productSales[item.name].revenue += item.price * item.quantity;
-            });
+            if (Array.isArray(order.items)) {
+                order.items.forEach(item => {
+                    if (item && item.name) {
+                        if (!productSales[item.name]) {
+                            productSales[item.name] = { quantity: 0, revenue: 0 };
+                        }
+                        let quantity = typeof item.quantity === 'number' ? item.quantity : parseInt(item.quantity) || 0;
+                        let price = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+                        if(isNaN(quantity) || quantity<0) quantity=0;
+                        if(isNaN(price) || price<0) price=0;
+                        
+                        productSales[item.name].quantity += quantity;
+                        productSales[item.name].revenue += price * quantity;
+                    }
+                });
+            }
         });
         
         // En çok satan 5 ürünü al
+        // Sadece satış yapılan ürünleri göster (quantity > 0)
         const topProducts = Object.entries(productSales)
+            .filter(([,d])=>d.quantity>0)
             .sort(([,a], [,b]) => b.quantity - a.quantity)
             .slice(0, 5);
         
@@ -408,21 +487,16 @@ class RaporlarPanel {
     
     updateTopProductsChart(topProducts) {
         const canvas = document.getElementById('topProductsChart');
-        if (!canvas) {
-            console.error('Top products chart canvas bulunamadı');
-            return;
-        }
-        
-        if (this.charts.topProductsChart) {
-            this.charts.topProductsChart.destroy();
-        }
-        
-        if (topProducts.length === 0) {
+        if (!canvas) return;
+        if (this.charts.topProductsChart) { this.charts.topProductsChart.destroy(); canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height); }
+        if (!topProducts.length) {
             canvas.style.display = 'none';
+            let parent = canvas.parentElement;
+            parent && (parent.innerHTML = '<div class="empty-message">Bu tarih aralığında ürün satışı bulunamadı.</div>');
             return;
+        } else {
+            canvas.style.display = 'block';
         }
-        
-        canvas.style.display = 'block';
         
         this.charts.topProductsChart = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
@@ -456,19 +530,19 @@ class RaporlarPanel {
     
     updateTopProductsList(topProducts) {
         const container = document.getElementById('topProductsList');
-        if (!container) {
-            console.error('Top products list container bulunamadı');
-            return;
-        }
+        if (!container) return;
         
         container.innerHTML = '';
         
-        if (topProducts.length === 0) {
+        if (!topProducts.length) {
             container.innerHTML = '<p style="text-align: center; color: #2d3748;">Bu tarih aralığında ürün satışı bulunamadı</p>';
             return;
         }
         
         topProducts.forEach(([name, data], index) => {
+            let quantity = (typeof data.quantity==='number' && data.quantity>0) ? data.quantity : 0;
+            let revenue = (typeof data.revenue==='number' && data.revenue>0) ? data.revenue : 0;
+            if(quantity===0) return;
             const item = document.createElement('div');
             item.className = 'top-product-item';
             item.innerHTML = `
@@ -476,8 +550,8 @@ class RaporlarPanel {
                 <div class="product-info">
                     <div class="product-name">${name}</div>
                     <div class="product-stats">
-                        <span>${data.quantity} adet</span>
-                        <span>${data.revenue.toFixed(2)} TL</span>
+                        <span>${quantity} adet</span>
+                        <span>${revenue.toFixed(2)} TL</span>
                     </div>
                 </div>
             `;
@@ -490,11 +564,14 @@ class RaporlarPanel {
         
         // Masa istatistiklerini hesapla
         orders.forEach(order => {
-            if (!tableStats[order.masaName]) {
-                tableStats[order.masaName] = { orders: 0, revenue: 0 };
+            const masaName = order.masaName || 'Bilinmeyen Masa';
+            const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(order.total) || 0;
+            
+            if (!tableStats[masaName]) {
+                tableStats[masaName] = { orders: 0, revenue: 0 };
             }
-            tableStats[order.masaName].orders++;
-            tableStats[order.masaName].revenue += order.total;
+            tableStats[masaName].orders++;
+            tableStats[masaName].revenue += orderTotal;
         });
         
         // En aktif masaları göster
@@ -545,10 +622,17 @@ class RaporlarPanel {
 }
 
 // Global fonksiyon
-function generateReport() {
-    if (window.raporlarPanel) {
-        window.raporlarPanel.generateReport();
-    }
+window.generateReport = function() {
+    if (window.raporlarPanel) window.raporlarPanel.generateReport();
+};
+
+// MODAL LOGİĞİ
+function updateClearBtnState() {
+    const clearOrders = document.getElementById('clearOrders').checked;
+    const clearRevenue = document.getElementById('clearRevenue').checked;
+    const clearProductStats = document.getElementById('clearProductStats').checked;
+    const clearMenu = document.getElementById('clearMenu').checked;
+    document.getElementById('confirmClearData').disabled = !(clearOrders || clearRevenue || clearProductStats || clearMenu);
 }
 
 // Panel başlatma
@@ -556,4 +640,59 @@ let raporlarPanel;
 document.addEventListener('DOMContentLoaded', function() {
     raporlarPanel = new RaporlarPanel();
     window.raporlarPanel = raporlarPanel;
+
+    // Temizlik butonu işleyici
+    const clearBtn = document.getElementById('clearDataBtn');
+    const modal = document.getElementById('clearDataModal');
+    const cancelBtn = document.getElementById('cancelClearData');
+    const confirmBtn = document.getElementById('confirmClearData');
+    const clearMsg = document.getElementById('clearMsg');
+    document.getElementById('clearOrders').addEventListener('change', updateClearBtnState);
+    document.getElementById('clearRevenue').addEventListener('change', updateClearBtnState);
+    document.getElementById('clearProductStats').addEventListener('change', updateClearBtnState);
+    document.getElementById('clearMenu').addEventListener('change', updateClearBtnState);
+    updateClearBtnState();
+
+    clearBtn && clearBtn.addEventListener('click', () => {
+        modal.style.display = 'block';
+        clearMsg.innerHTML = '';
+        updateClearBtnState();
+    });
+    cancelBtn && cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.style.display = 'none';
+        clearMsg.innerHTML = '';
+    });
+    confirmBtn && confirmBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        confirmBtn.disabled = true;
+        clearMsg.innerHTML = '<span style="color:#d97706;">İşlem yapılıyor...</span>';
+        const clearOrders = document.getElementById('clearOrders').checked;
+        const clearRevenue = document.getElementById('clearRevenue').checked;
+        const clearProductStats = document.getElementById('clearProductStats').checked;
+        const clearMenu = document.getElementById('clearMenu').checked;
+        if (!(clearOrders || clearRevenue || clearProductStats || clearMenu)) {
+            clearMsg.innerHTML = '<span style="color:#c53030;">En az bir seçenek seçmelisiniz!</span>';
+            confirmBtn.disabled = false;
+            return;
+        }
+        const ADMIN_TOKEN = 'changeme-safe-admin-token'; // Dilersen localStorage veya .env'den de çekilebilir
+        // API isteği
+        const result = await fetch(`${API_BASE_URL}/api/clear-data`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${ADMIN_TOKEN}`
+            },
+            body: JSON.stringify({ orders: clearOrders, revenue: clearRevenue, productStats: clearProductStats, menu: clearMenu })
+          })
+          .then(x=>x.json()).catch(() => ({}));
+        if(result && result.success) {
+            clearMsg.innerHTML = '<span style="color:#059669;">Seçilen veriler başarıyla temizlendi!</span>';
+            setTimeout(() => { modal.style.display = 'none'; clearMsg.innerHTML = ''; generateReport(); }, 1200);
+        } else {
+            clearMsg.innerHTML = '<span style="color:#c53030;">Bir hata oluştu!</span>';
+            confirmBtn.disabled = false;
+        }
+    });
 });
